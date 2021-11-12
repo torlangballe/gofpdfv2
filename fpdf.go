@@ -3005,7 +3005,7 @@ func (f *Fpdf) ImageTypeFromMime(mimeStr string) (tp string) {
 	return
 }
 
-func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX, flow bool, link int, linkStr string) {
+func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX, flow, inline bool, link int, linkStr string) {
 	// Automatic width and height calculation if needed
 	if w == 0 && h == 0 {
 		// Put image at 96 dpi
@@ -3046,7 +3046,9 @@ func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX,
 			f.x = x2
 		}
 		y = f.y
-		f.y += h
+		if !inline {
+			f.y += h
+		}
 	}
 	if !allowNegativeX {
 		if x < 0 {
@@ -3058,6 +3060,9 @@ func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX,
 	f.outf("q %.5f 0 0 %.5f %.5f %.5f cm /I%s Do Q", w*f.k, h*f.k, x*f.k, (f.h-(y+h))*f.k, info.i)
 	if link > 0 || len(linkStr) > 0 {
 		f.newLink(x, y, w, h, link, linkStr)
+	}
+	if inline {
+		f.x += w * f.k
 	}
 }
 
@@ -3117,7 +3122,7 @@ func (f *Fpdf) ImageOptions(imageNameStr string, x, y, w, h float64, flow bool, 
 	if f.err != nil {
 		return
 	}
-	f.imageOut(info, x, y, w, h, options.AllowNegativePosition, flow, link, linkStr)
+	f.imageOut(info, x, y, w, h, options.AllowNegativePosition, flow, options.IsInline, link, linkStr)
 	return
 }
 
@@ -3152,6 +3157,7 @@ type ImageOptions struct {
 	ImageType             string
 	ReadDpi               bool
 	AllowNegativePosition bool
+	IsInline              bool
 }
 
 // RegisterImageOptionsReader registers an image, reading it from Reader r, adding it

@@ -20,6 +20,8 @@ package gofpdf
 
 import (
 	"strings"
+
+	"github.com/torlangballe/zutil/zlog"
 )
 
 var embeddedFontList = map[string]string{
@@ -45,6 +47,7 @@ func (f *Fpdf) coreFontReader(familyStr, styleStr string) (r *strings.Reader) {
 		r = strings.NewReader(str)
 	} else {
 		f.SetErrorf("could not locate \"%s\" among embedded core font definition files", key)
+		zlog.Info("Path:", familyStr, ":", styleStr, zlog.CallingStackString())
 	}
 	return
 }

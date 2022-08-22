@@ -40,6 +40,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/torlangballe/zutil/zlog"
 )
 
 var gl struct {
@@ -2166,6 +2168,9 @@ func (f *Fpdf) newLink(x, y, w, h float64, link int, linkStr string) {
 	// linkList = make([]linkType, 0, 8)
 	// f.pageLinks[f.page] = linkList
 	// }
+	// if linkStr != "" {
+	// 	zlog.Info("newLink", x, y, w, h, link, linkStr)
+	// }
 	f.pageLinks[f.page] = append(f.pageLinks[f.page],
 		linkType{x * f.k, f.hPt - y*f.k, w * f.k, h * f.k, link, linkStr})
 }
@@ -2311,6 +2316,7 @@ func (f *Fpdf) SetAcceptPageBreakFunc(fnc func() bool) {
 // link takes precedence over linkStr.
 func (f *Fpdf) CellFormat(w, h float64, txtStr, borderStr string, ln int,
 	alignStr string, fill bool, link int, linkStr string) {
+	// zlog.Info("CellFormat:", link, txtStr)
 	// dbg("CellFormat. h = %.2f, borderStr = %s", h, borderStr)
 	if f.err != nil {
 		return
@@ -2933,6 +2939,7 @@ func (f *Fpdf) WriteLinkID(h float64, displayStr string, linkID int) {
 // alignStr sees to horizontal alignment of the given textStr. The options are
 // "L", "C" and "R" (Left, Center, Right). The default is "L".
 func (f *Fpdf) WriteAligned(width, lineHeight float64, textStr, alignStr string) {
+	fmt.Println("Text:", textStr)
 	lMargin, _, rMargin, _ := f.GetMargins()
 
 	pageWidth, _ := f.GetPageSize()
@@ -3006,6 +3013,7 @@ func (f *Fpdf) ImageTypeFromMime(mimeStr string) (tp string) {
 }
 
 func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX, flow, inline bool, link int, linkStr string) {
+	// fmt.Println("imageOut:", x, y, w, h, inline)
 	// Automatic width and height calculation if needed
 	if w == 0 && h == 0 {
 		// Put image at 96 dpi
@@ -3034,7 +3042,11 @@ func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX,
 	if h == 0 {
 		h = w * info.h / info.w
 	}
+	zlog.Info("Image:", w, h, inline)
 	// Flowing mode
+	if w < 200 && h < 20 {
+		inline = true
+	}
 	if flow {
 		if f.y+h > f.pageBreakTrigger && !f.inHeader && !f.inFooter && f.acceptPageBreak() {
 			// Automatic page break
@@ -3156,6 +3168,7 @@ func (f *Fpdf) RegisterImageReader(imgName, tp string, r io.Reader) (info *Image
 type ImageOptions struct {
 	ImageType             string
 	ReadDpi               bool
+	MultiplyDPI           float64
 	AllowNegativePosition bool
 	IsInline              bool
 }
@@ -3194,6 +3207,9 @@ func (f *Fpdf) RegisterImageOptionsReader(imgName string, options ImageOptions, 
 		info = f.parsegif(r)
 	default:
 		f.err = fmt.Errorf("unsupported image type: %s", options.ImageType)
+	}
+	if options.MultiplyDPI != 0 {
+		info.dpi *= options.MultiplyDPI
 	}
 	if f.err != nil {
 		return

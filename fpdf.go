@@ -2931,7 +2931,7 @@ func (f *Fpdf) WriteLinkID(h float64, displayStr string, linkID int) {
 //
 // width indicates the width of the box the text will be drawn in. This is in
 // the unit of measure specified in New(). If it is set to 0, the bounding box
-//of the page will be taken (pageWidth - leftMargin - rightMargin).
+// of the page will be taken (pageWidth - leftMargin - rightMargin).
 //
 // lineHeight indicates the line height in the unit of measure specified in
 // New().
@@ -3042,7 +3042,7 @@ func (f *Fpdf) imageOut(info *ImageInfoType, x, y, w, h float64, allowNegativeX,
 	if h == 0 {
 		h = w * info.h / info.w
 	}
-	zlog.Info("Image:", w, h, inline)
+	// zlog.Info("Image:", w, h, inline)
 	// Flowing mode
 	if w < 200 && h < 20 {
 		inline = true
@@ -3249,8 +3249,16 @@ func (f *Fpdf) RegisterImageOptions(fileStr string, options ImageOptions) (info 
 		return
 	}
 
-	file, err := os.Open(fileStr)
+	var file io.ReadCloser
+	var err error
+
+	if f.FileSystem != nil {
+		file, err = f.FileSystem.Open(fileStr)
+	} else {
+		file, err = os.Open(fileStr)
+	}
 	if err != nil {
+		zlog.Error(err, "open image", fileStr)
 		f.err = err
 		return
 	}

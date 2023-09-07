@@ -46,7 +46,7 @@ func (f *Fpdf) coreFontReader(familyStr, styleStr string) (r *strings.Reader) {
 	if ok {
 		r = strings.NewReader(str)
 	} else {
-		f.SetErrorf("could not locate \"%s\" among embedded core font definition files", key)
+		f.SetErrorf("could not locate \"%s\" among embedded core font definition files", key, embeddedFontList)
 		zlog.Info("Path:", familyStr, ":", styleStr, zlog.CallingStackString())
 	}
 	return

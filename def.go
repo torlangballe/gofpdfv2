@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"time"
 )
 
@@ -602,6 +603,8 @@ type Fpdf struct {
 	}
 	spotColorMap           map[string]spotColorType // Map of named ink-based colors
 	userUnderlineThickness float64                  // A custom user underline thickness multiplier.
+
+	FileSystem fs.FS
 }
 
 type encType struct {
